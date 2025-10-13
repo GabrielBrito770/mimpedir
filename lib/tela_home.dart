@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mimpedir/tela_cad_restaurante.dart';
 import '../restaurante.dart';
+import 'banco/restaurante_dao.dart';
 
 class TelaHome extends StatefulWidget {
   TelaHome({super.key});
@@ -19,7 +20,8 @@ class TelaHomeState extends State<TelaHome>{
   }
 
   Future<void> carregarRestaurantes() async{
-    final lista = await RestauranteDAO.listarTodos();
+    final lista = await
+    RestauranteDAO.listarTodos();
     setState(() {
       restaurantes = lista;
     });
@@ -31,12 +33,22 @@ class TelaHomeState extends State<TelaHome>{
       appBar: AppBar(
         title: const Text('Lista de Restaurantes'),
         actions: [
-          IconButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => TelaCadRestaurante()));
+          TextButton(
+              onPressed: () async{
+                final t = await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => TelaCadRestaurante())
+                );
+
+                if(t == false || t == null){
+
+                  setState(() {
+                    carregarRestaurantes();
+                  });
+
+                }
+
               },
-              icon: Icon(Icons.add)
+              child: Icon(Icons.add)
           )
         ],
       ),
@@ -48,7 +60,7 @@ class TelaHomeState extends State<TelaHome>{
               return Card(
                 margin: EdgeInsets.symmetric(vertical: 8),
                 child: ListTile(
-                    title: Text(r.nome ?? 'sem nome'),
+                    title: Text(r.nomeRestaurante ?? 'sem nome'),
                     subtitle: Text('ID: ${r.codigo}'),
                     trailing: Row(
                         mainAxisSize: MainAxisSize.min,
