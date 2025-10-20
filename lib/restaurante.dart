@@ -27,7 +27,7 @@ class Restaurante{
   set proprietario(Usuario? valor) => _proprietario = valor;
   set TipodeCulinaria(Tipo? valor) => _tipodeCulinaria = valor;
 
-
+//
   Restaurante({
     int? codigo,
     String? nomeRestaurante,
