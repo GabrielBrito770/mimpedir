@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:mimpedir/tela_cad_restaurante.dart';
+import 'package:mimpedir/tela_edit_restaurante.dart';
 import '../restaurante.dart';
 import 'banco/restaurante_dao.dart';
 
 class TelaHome extends StatefulWidget {
-  TelaHome({super.key});
+  const TelaHome({super.key});
 
   @override
   State<TelaHome> createState() => TelaHomeState();
 }
 
-class TelaHomeState extends State<TelaHome>{
+class TelaHomeState extends State<TelaHome> {
   List<Restaurante> restaurantes = [];
 
   @override
@@ -19,9 +20,8 @@ class TelaHomeState extends State<TelaHome>{
     carregarRestaurantes();
   }
 
-  Future<void> carregarRestaurantes() async{
-    final lista = await
-    RestauranteDAO.listarTodos();
+  Future<void> carregarRestaurantes() async {
+    final lista = await RestauranteDAO.listarTodos();
     setState(() {
       restaurantes = lista;
     });
@@ -33,61 +33,96 @@ class TelaHomeState extends State<TelaHome>{
       appBar: AppBar(
         title: const Text('Lista de Restaurantes'),
         actions: [
-          TextButton(
-              onPressed: () async{
-                final t = await Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => TelaCadRestaurante())
-                );
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () async {
+              final resultado = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => TelaCadRestaurante()),
+              );
 
-                if(t == false || t == null){
-
-                  setState(() {
-                    carregarRestaurantes();
-                  });
-
-                }
-
-              },
-              child: Icon(Icons.add)
+              // Se resultado for true, recarrega a lista
+              if (resultado == true) {
+                carregarRestaurantes();
+              }
+            },
           )
         ],
       ),
-      body: Padding(padding: const EdgeInsets.all(10),
+      body: Padding(
+        padding: const EdgeInsets.all(10),
         child: ListView.builder(
-            itemCount: restaurantes.length,
-            itemBuilder: (context, index) {
-              final r = restaurantes[index];
-              return Card(
-                margin: EdgeInsets.symmetric(vertical: 8),
-                child: ListTile(
-                    title: Text(r.nomeRestaurante ?? 'sem nome'),
-                    subtitle: Text('ID: ${r.codigo}'),
-                    trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(
-                                builder: (context) => TelaCadRestaurante()));
-                          }, icon: Icon(Icons.edit, color: Colors.indigo,)),
-                          IconButton(onPressed: () {},
-                              icon: Icon(Icons.delete, color: Colors.brown)),
-                        ]
-                    )
+          itemCount: restaurantes.length,
+          itemBuilder: (context, index) {
+            final r = restaurantes[index];
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              child: ListTile(
+                title: Text(r.nomeRestaurante ?? 'sem nome'),
+                subtitle: Text('ID: ${r.codigo}'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.indigo),
+                      onPressed: () async{
+                        // Aqui você pode implementar a edição
+                        TelaEditRestaurante.restaurante = await RestauranteDAO.listar(r.codigo);
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => TelaEditRestaurante()));
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.brown),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) => AlertDialog(
+                            title: const Text('ATENÇÃO!'),
+                            content: const Text('Confirmar exclusão'),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('Cancelar'),
+                              ),
+                              TextButton(
+                                onPressed: () async {
+                                  await RestauranteDAO.excluir(r);
+                                  await carregarRestaurantes();
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('Sim'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
-              );
-            }
-          ),
+              ),
+            );
+          },
         ),
+      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: (){
+        onPressed: () async {
+          final resultado = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => TelaCadRestaurante()),
+          );
 
+          if (resultado == true) {
+            carregarRestaurantes();
+          }
         },
-        child: Icon(Icons.add)
+        child: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const<BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Adicionar'),
-          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Adicionar'),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Início'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Config'),
         ],
       ),
     );
